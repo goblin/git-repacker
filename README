@@ -1,0 +1,30 @@
+git-repacker is a tool to inflate all the objects in a pack file
+and write them into a new format, which I called 'UNPK'.
+
+While the resulting 'UNPK' file will always be larger than the original
+.pack file, it can be compressed afterwards in a single stream, for instance
+with .xz, to make the final file much smaller than the original .pack.
+
+USAGE:
+To compress your .pack file use:
+$ ./unpack.pl < pack-<sha>.pack > pack-<sha>.unpk
+$ rm pack-<sha>.idx
+$ xz pack-<sha>.unpk
+
+
+To decompress that use:
+$ xz -d pack-<sha>.unpk.xz
+$ ./repack.pl < pack-<sha>.unpk > pack-<sha>.pack
+$ sha1sum pack-<sha>.pack | cut -c1-40 | xxd -r -ps >> pack-<sha>.pack
+$ git index-pack <pack-sha>.pack
+
+The resulting pack file will be different from the original, I think
+that's because of slight differences between various Zlib versions and flags.
+So you might want to change the name of the pack file and update info/packs;
+however I found git fsck and other git commands worked fine without it --
+nothing seems to care if the pack file name actually matches the SHA1 at
+the end.
+
+DISCLAIMER:
+It's pre-alpha stage experimental stuff. It will likely destroy all your data.
+Be very careful.
